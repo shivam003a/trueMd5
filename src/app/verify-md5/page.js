@@ -14,9 +14,17 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip"
+
 import { FaCheckCircle } from "react-icons/fa";
 import { ImCross } from "react-icons/im";
 import { MdContentCopy } from "react-icons/md";
+import { LuClipboardCopy } from "react-icons/lu";
 
 import FileInfo from '@/components/FileInfo';
 
@@ -82,24 +90,33 @@ function VerifyMd5() {
         setOpen(false)
     }
 
-    function copyFileHash(e){
-        if(fileHash){
+    function copyFileHash(e) {
+        if (fileHash) {
             setIsShown(true)
             navigator.clipboard.writeText(fileHash)
         }
-        setTimeout(()=>{
+        setTimeout(() => {
             setIsShown(false)
         }, [500])
+    }
+
+    async function copyFromClipboard() {
+        try {
+            const text = await navigator.clipboard.readText();
+            setOriginalMD5(text);
+        } catch (err) {
+            console.error("Failed to read clipboard contents: ", err);
+        }
     }
 
     return (
         <>
             <div className='max-w-[1200px] mx-auto'>
                 <div className='mt-3'></div>
-                <Link href="/" className='font-honk text-4xl py-4'>trueMD5</Link>
+                <Link href="/" className='font-honk text-4xl py-4 ml-2'>trueMD5</Link>
 
-                <div className='flex flex-row gap-1 items-stretch mt-6'>
-                    <div className='flex-2/3 p-2'>
+                <div className='flex flex-col md:flex-row gap-1 items-stretch mt-6'>
+                    <div className='flex-1/2 md:2/3 p-2'>
                         <div className='flex flex-col gap-2 mb-5'>
                             <Label
                                 htmlFor="file"
@@ -111,7 +128,7 @@ function VerifyMd5() {
                             />
                         </div>
 
-                        <div className='flex flex-col gap-2 mb-5'>
+                        <div className='flex flex-col gap-2 mb-5 relative'>
                             <Label
                                 htmlFor="originalMD5"
                                 className="font-poppins text-black text-sm"
@@ -123,6 +140,17 @@ function VerifyMd5() {
                                 value={originialMD5}
                                 onChange={(e) => setOriginalMD5(e?.target?.value)}
                             />
+                            <div className='absolute bottom-[6px] right-2 cursor-pointer' onClick={copyFromClipboard}>
+                                <TooltipProvider>
+                                    <Tooltip>
+                                        <TooltipTrigger><LuClipboardCopy /></TooltipTrigger>
+                                        <TooltipContent>
+                                            <p>Copy From Clipboard</p>
+                                        </TooltipContent>
+                                    </Tooltip>
+                                </TooltipProvider>
+
+                            </div>
                         </div>
 
                         {
@@ -138,9 +166,17 @@ function VerifyMd5() {
                                     value={fileHash}
                                     readOnly
                                 />
-                                <div className='absolute bottom-[10px] right-2 cursor-pointer' onClick={copyFileHash}>
-                                    <p className='absolute bg-blue-200 rounded-lg px-2 py-1 text-xs bottom-4 -right-4' style={{display: isShown?"block":"none"}}>Copied!</p>
-                                    <MdContentCopy />
+                                <div className='absolute bottom-[6px] right-2 cursor-pointer' onClick={copyFileHash}>
+                                    <p className='absolute bg-blue-200 rounded-lg px-2 py-1 text-xs bottom-4 -right-4' style={{ display: isShown ? "block" : "none" }}>Copied!</p>
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger><MdContentCopy /></TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>Copy To Clipboard</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
+
                                 </div>
                             </div>
                         }
@@ -164,7 +200,7 @@ function VerifyMd5() {
 
                     <div className='border-r border-gray-300 self-stretch mx-2'></div>
 
-                    <div className='flex-1/3 p-2 flex flex-col gap-3'>
+                    <div className='flex-1/2 md:1/3 p-2 flex flex-col gap-3'>
                         <p className='text-black font-normal'>File Info</p>
                         {
                             file ? (
@@ -191,7 +227,7 @@ function VerifyMd5() {
                                 ) : (
                                     <div className='flex gap-2 flex-col justify-center items-center'>
                                         <div className='bg-[#F08080] rounded-full p-4'>
-                                        <ImCross size={48} color='#FFFFFF' />
+                                            <ImCross size={48} color='#FFFFFF' />
                                         </div>
                                         <p className='text-lg'>Hashes do not match</p>
                                     </div>
