@@ -4,7 +4,7 @@ import Link from 'next/link'
 function Footer() {
     return (
         <footer className='max-w-[1200px] mx-auto flex flex-col items-center justify-center mb-8'>
-            <p className='font-poppins text-sm'>&copy; {new Date().getFullYear()} trueMD5. All rights reserved.</p>
+            <p className='font-poppins text-sm'>&copy; {new Date()?.getFullYear()} trueMD5. All rights reserved.</p>
             <div className='flex mt-4 gap-5'>
                 <Link href="https://instagram.com" target="_blank" rel="noopener noreferrer">
                     <FaInstagram size={22} color='#E1306C' />

@@ -1,6 +1,6 @@
 'use client'
 import DragAnDrop from '@/components/DragAndDrop';
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import SparkMD5 from 'spark-md5';
 import Link from "next/link"
 import { Label } from "@/components/ui/label"
@@ -38,6 +38,8 @@ function VerifyMd5() {
     const [open, setOpen] = useState(false)
     const [isShown, setIsShown] = useState(false)
 
+    const inputRef = useRef(null)
+
 
     const CHUNK_SIZE = 1024 * 1024 * 10;
 
@@ -47,6 +49,7 @@ function VerifyMd5() {
             setOpen(true)
         } else {
             if (!file) return;
+            if (!originialMD5) return;
 
             const chunkCount = Math.ceil(file.size / CHUNK_SIZE);
             let currentChunk = 0;
@@ -88,6 +91,9 @@ function VerifyMd5() {
         setProgress(0);
         setFileHash('');
         setOpen(false)
+        if (inputRef.current) {
+            inputRef.current.value = '';
+        }
     }
 
     function copyFileHash(e) {
@@ -116,7 +122,7 @@ function VerifyMd5() {
                 <Link href="/" className='font-honk text-4xl py-4 ml-2'>trueMD5</Link>
 
                 <div className='flex flex-col md:flex-row gap-1 items-stretch mt-6'>
-                    <div className='flex-1/2 md:2/3 p-2'>
+                    <div className='flex-1/2 md:flex-2/3 p-2'>
                         <div className='flex flex-col gap-2 mb-5'>
                             <Label
                                 htmlFor="file"
@@ -125,6 +131,7 @@ function VerifyMd5() {
                             <DragAnDrop
                                 file={file}
                                 setFile={setFile}
+                                inputRef={inputRef}
                             />
                         </div>
 
@@ -195,12 +202,13 @@ function VerifyMd5() {
 
                         <div className='flex flex-col gap-2'>
                             <Button className="bg-cs-blue cursor-pointer" onClick={() => handleFileChange(progress === 100 ? "Compare" : 'Verify')}>{progress === 0 ? "Verify" : (progress === 100 ? "Compare" : "Hashing...")}</Button>
+                            <Button onClick={verifyAnotherFile}>Reset</Button>
                         </div>
                     </div>
 
                     <div className='border-r border-gray-300 self-stretch mx-2'></div>
 
-                    <div className='flex-1/2 md:1/3 p-2 flex flex-col gap-3'>
+                    <div className='flex-1/2 md:flex-1/3 p-2 flex flex-col gap-3'>
                         <p className='text-black font-normal'>File Info</p>
                         {
                             file ? (

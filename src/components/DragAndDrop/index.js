@@ -1,9 +1,9 @@
 'use client'
-import React, { useRef, useState } from 'react'
+import React, { useState } from 'react'
 
-function DragAnDrop({ file, setFile }) {
+function DragAnDrop({ file, setFile, inputRef }) {
     const [isDragging, setIsDragging] = useState(false);
-    const inputRef = useRef(null)
+    
 
     function handleDragOver(e) {
         e.preventDefault();
@@ -17,7 +17,7 @@ function DragAnDrop({ file, setFile }) {
     function handleDrop(e) {
         e.preventDefault();
         setIsDragging(false);
-        const droppedFile = e.dataTransfer.files[0];
+        const droppedFile = e?.dataTransfer?.files?.[0];
         if (droppedFile) setFile(droppedFile);
     }
 

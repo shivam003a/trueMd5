@@ -25,7 +25,6 @@ function ShowDemo() {
                             className="w-full aspect-video"
                             src="https://www.youtube.com/embed/1SGv_SvNY4o?si=4kLNDMtupBEUV5ZL"
                             title="YouTube video player"
-                            frameBorder="0"
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                             referrerPolicy="strict-origin-when-cross-origin"
                             allowFullScreen>

@@ -27,12 +27,12 @@ function FileInfo({ file, originalMD5 }) {
             </div>
             <div>
                 <p className='font-poppins text-black text-xs'>Modified Date</p>
-                <p className='font-poppins text-cs-gray text-sm'>{new Date(file.lastModified).toLocaleString()}</p>
+                <p className='font-poppins text-cs-gray text-sm'>{new Date(file?.lastModified)?.toLocaleString()}</p>
             </div>
             {
                 originalMD5 && <div>
                 <p className='font-poppins text-black text-xs'>originalMD5</p>
-                <p className='font-poppins text-cs-gray text-sm'>{originalMD5?.trim().toLowerCase()}</p>
+                <p className='font-poppins text-cs-gray text-sm'>{originalMD5?.trim()?.toLowerCase()}</p>
             </div>
             }
         </>
