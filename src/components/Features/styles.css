@@ -1,0 +1,8 @@
+.text-image {
+    background-image: url('../../../public/assets/grayscale.jpeg');
+    background-size: cover;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    opacity: 1;
+}
