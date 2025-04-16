@@ -27,6 +27,8 @@ import { MdContentCopy } from "react-icons/md";
 import { LuClipboardCopy } from "react-icons/lu";
 
 import FileInfo from '@/components/FileInfo';
+import { compareMD5Schema, verifyFileSchema } from '@/helpers/validation';
+import { ZodError } from 'zod';
 
 
 function VerifyMd5() {
@@ -38,6 +40,7 @@ function VerifyMd5() {
     const [open, setOpen] = useState(false)
     const [isShown, setIsShown] = useState(false)
     const [hashStated, setHashStarted] = useState(false)
+    const [errMsg, setErrMsg] = useState(null)
 
     const inputRef = useRef(null)
 
@@ -45,44 +48,71 @@ function VerifyMd5() {
     const CHUNK_SIZE = 1024 * 1024 * 10;
 
     const handleFileChange = (e) => {
-        if (e === "Compare") {
-            setMatch(originialMD5 === fileHash)
-            setOpen(true)
-        } else {
-            setHashStarted(true)
-            if (!file) return;
+        try {
+            if (e === "Compare") {
+                compareMD5Schema.parse({
+                    file,
+                    originialMD5,
+                    fileHash
+                })
+                setErrMsg("")
 
-            const chunkCount = Math.ceil(file.size / CHUNK_SIZE);
-            let currentChunk = 0;
-            const spark = new SparkMD5.ArrayBuffer();
-            const fileReader = new FileReader();
+                setMatch(originialMD5 === fileHash)
+                setOpen(true)
+            } else {
+                verifyFileSchema.parse({
+                    file,
+                    originialMD5
+                })
+                setErrMsg('')
 
-            const loadNext = () => {
-                const start = currentChunk * CHUNK_SIZE;
-                const end = Math.min(start + CHUNK_SIZE, file.size);
-                fileReader.readAsArrayBuffer(file.slice(start, end));
-            };
+                setHashStarted(true)
+                if (!file) return;
 
-            fileReader.onload = (e) => {
-                if (!e.target?.result) return;
-                spark.append(e.target.result);
-                currentChunk++;
-                setProgress(Math.floor((currentChunk / chunkCount) * 100));
+                const chunkCount = Math.ceil(file.size / CHUNK_SIZE);
+                let currentChunk = 0;
+                const spark = new SparkMD5.ArrayBuffer();
+                const fileReader = new FileReader();
 
-                if (currentChunk < chunkCount) {
-                    loadNext();
-                } else {
-                    const md5 = spark.end();
-                    setFileHash(md5);
-                    setProgress(100);
-                    setHashStarted(false)
-                }
-            };
-            fileReader.onerror = () => {
-                console.error('File reading failed');
-            };
+                const loadNext = () => {
+                    const start = currentChunk * CHUNK_SIZE;
+                    const end = Math.min(start + CHUNK_SIZE, file.size);
+                    fileReader.readAsArrayBuffer(file.slice(start, end));
+                };
 
-            loadNext();
+                fileReader.onload = (e) => {
+                    if (!e.target?.result) return;
+                    spark.append(e.target.result);
+                    currentChunk++;
+                    setProgress(Math.floor((currentChunk / chunkCount) * 100));
+
+                    if (currentChunk < chunkCount) {
+                        loadNext();
+                    } else {
+                        const md5 = spark.end();
+                        setFileHash(md5);
+                        setProgress(100);
+                        setHashStarted(false)
+                    }
+                };
+                fileReader.onerror = () => {
+                    console.error('File reading failed');
+                };
+
+                loadNext();
+            }
+        } catch (e) {
+            console.log(e)
+            if (e instanceof ZodError) {
+                const fieldErrors = {};
+
+                e.errors.forEach((err) => {
+                    const field = err.path[0];
+                    fieldErrors[field] = err.message;
+                });
+                setErrMsg(fieldErrors);
+                console.log(fieldErrors)
+            }
         }
     };
 
@@ -93,6 +123,7 @@ function VerifyMd5() {
         setProgress(0);
         setFileHash('');
         setOpen(false)
+        setErrMsg(null)
         if (inputRef.current) {
             inputRef.current.value = '';
         }
@@ -135,6 +166,7 @@ function VerifyMd5() {
                                 setFile={setFile}
                                 inputRef={inputRef}
                             />
+                            {errMsg?.file && <p style={{ color: 'red' }} className='text-xs font-poppins'>*{errMsg.file}</p>}
                         </div>
 
                         <div className='flex flex-col gap-2 mb-5 relative'>
@@ -142,24 +174,27 @@ function VerifyMd5() {
                                 htmlFor="originalMD5"
                                 className="font-poppins text-black text-sm"
                             >Original MD5</Label>
-                            <Input
-                                type="text"
-                                placeholder="Original MD5 hash (optional)"
-                                className="border-2 border-gray-300 focus:border-0"
-                                value={originialMD5}
-                                onChange={(e) => setOriginalMD5(e?.target?.value)}
-                            />
-                            <div className='absolute bottom-[6px] right-2 cursor-pointer' onClick={copyFromClipboard}>
-                                <TooltipProvider>
-                                    <Tooltip>
-                                        <TooltipTrigger><LuClipboardCopy /></TooltipTrigger>
-                                        <TooltipContent>
-                                            <p>Copy From Clipboard</p>
-                                        </TooltipContent>
-                                    </Tooltip>
-                                </TooltipProvider>
+                            <div className='relative'>
+                                <Input
+                                    type="text"
+                                    placeholder="Original MD5 hash (optional)"
+                                    className="border-2 border-gray-300 focus:border-0"
+                                    value={originialMD5}
+                                    onChange={(e) => setOriginalMD5(e?.target?.value)}
+                                />
+                                <div className='absolute bottom-[6px] right-2 cursor-pointer' onClick={copyFromClipboard}>
+                                    <TooltipProvider>
+                                        <Tooltip>
+                                            <TooltipTrigger><LuClipboardCopy /></TooltipTrigger>
+                                            <TooltipContent>
+                                                <p>Copy From Clipboard</p>
+                                            </TooltipContent>
+                                        </Tooltip>
+                                    </TooltipProvider>
 
+                                </div>
                             </div>
+                            {errMsg?.originialMD5 && <p style={{ color: 'red' }} className='text-xs font-poppins'>*{errMsg.originialMD5}</p>}
                         </div>
 
                         {
@@ -168,29 +203,31 @@ function VerifyMd5() {
                                     htmlFor="originalMD5"
                                     className="font-poppins text-black text-sm"
                                 >Calculated MD5</Label>
-                                <Input
-                                    type="text"
-                                    placeholder="Original MD5 hash"
-                                    className="border-2 border-gray-300 focus:border-0"
-                                    value={fileHash}
-                                    readOnly
-                                />
-                                <div className='absolute bottom-[6px] right-2 cursor-pointer' onClick={copyFileHash}>
-                                    <p className='absolute bg-blue-200 rounded-lg px-2 py-1 text-xs bottom-4 -right-4' style={{ display: isShown ? "block" : "none" }}>Copied!</p>
-                                    <TooltipProvider>
-                                        <Tooltip>
-                                            <TooltipTrigger><MdContentCopy /></TooltipTrigger>
-                                            <TooltipContent>
-                                                <p>Copy To Clipboard</p>
-                                            </TooltipContent>
-                                        </Tooltip>
-                                    </TooltipProvider>
-
+                                <div className='relative'>
+                                    <Input
+                                        type="text"
+                                        placeholder="Original MD5 hash"
+                                        className="border-2 border-gray-300 focus:border-0"
+                                        value={fileHash}
+                                        readOnly
+                                    />
+                                    <div className='absolute bottom-[6px] right-2 cursor-pointer' onClick={copyFileHash}>
+                                        <p className='absolute bg-blue-200 rounded-lg px-2 py-1 text-xs bottom-4 -right-4' style={{ display: isShown ? "block" : "none" }}>Copied!</p>
+                                        <TooltipProvider>
+                                            <Tooltip>
+                                                <TooltipTrigger><MdContentCopy /></TooltipTrigger>
+                                                <TooltipContent>
+                                                    <p>Copy To Clipboard</p>
+                                                </TooltipContent>
+                                            </Tooltip>
+                                        </TooltipProvider>
+                                    </div>
                                 </div>
+                                {errMsg?.fileHash && <p style={{ color: 'red' }} className='text-xs font-poppins'>*{errMsg.fileHash}</p>}
                             </div>
                         }
 
-                        {(hashStated && progress <= 100 || progress === 10) &&
+                        {(hashStated && progress < 100 || progress === 100) &&
                             <div className='flex flex-col gap-2 mb-5'>
                                 <Label
                                     htmlFor="originalMD5"
@@ -222,7 +259,7 @@ function VerifyMd5() {
             </div>
 
             {
-                <Dialog open={open} onOpenChange={verifyAnotherFile}>
+                <Dialog open={open} onOpenChange={setOpen}>
                     <DialogContent className="sm:max-w-[425px]">
                         <DialogHeader>
                             <DialogTitle>Check File Integrity</DialogTitle>
