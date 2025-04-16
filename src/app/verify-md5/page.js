@@ -37,6 +37,7 @@ function VerifyMd5() {
     const [fileHash, setFileHash] = useState('');
     const [open, setOpen] = useState(false)
     const [isShown, setIsShown] = useState(false)
+    const [hashStated, setHashStarted] = useState(false)
 
     const inputRef = useRef(null)
 
@@ -48,8 +49,8 @@ function VerifyMd5() {
             setMatch(originialMD5 === fileHash)
             setOpen(true)
         } else {
+            setHashStarted(true)
             if (!file) return;
-            if (!originialMD5) return;
 
             const chunkCount = Math.ceil(file.size / CHUNK_SIZE);
             let currentChunk = 0;
@@ -74,6 +75,7 @@ function VerifyMd5() {
                     const md5 = spark.end();
                     setFileHash(md5);
                     setProgress(100);
+                    setHashStarted(false)
                 }
             };
             fileReader.onerror = () => {
@@ -142,7 +144,7 @@ function VerifyMd5() {
                             >Original MD5</Label>
                             <Input
                                 type="text"
-                                placeholder="Original MD5 hash"
+                                placeholder="Original MD5 hash (optional)"
                                 className="border-2 border-gray-300 focus:border-0"
                                 value={originialMD5}
                                 onChange={(e) => setOriginalMD5(e?.target?.value)}
@@ -188,7 +190,7 @@ function VerifyMd5() {
                             </div>
                         }
 
-                        {progress > 0 && progress <= 100 &&
+                        {(hashStated && progress <= 100 || progress === 10) &&
                             <div className='flex flex-col gap-2 mb-5'>
                                 <Label
                                     htmlFor="originalMD5"
@@ -202,7 +204,7 @@ function VerifyMd5() {
 
                         <div className='flex flex-col gap-2'>
                             <Button className="bg-cs-blue cursor-pointer" onClick={() => handleFileChange(progress === 100 ? "Compare" : 'Verify')}>{progress === 0 ? "Verify" : (progress === 100 ? "Compare" : "Hashing...")}</Button>
-                            <Button onClick={verifyAnotherFile}>Reset</Button>
+                            <Button onClick={verifyAnotherFile} disabled={hashStated}>Reset</Button>
                         </div>
                     </div>
 

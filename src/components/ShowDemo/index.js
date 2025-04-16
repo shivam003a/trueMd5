@@ -21,14 +21,10 @@ function ShowDemo() {
                     </DialogHeader>
 
                     <div className="w-full">
-                        <iframe
-                            className="w-full aspect-video"
-                            src="https://www.youtube.com/embed/1SGv_SvNY4o?si=4kLNDMtupBEUV5ZL"
-                            title="YouTube video player"
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                            referrerPolicy="strict-origin-when-cross-origin"
-                            allowFullScreen>
-                        </iframe>
+                        <video className="aspect-video" controls muted controlsList="nodownload" disablePictureInPicture>
+                            <source src="/assets/Demo_trueMD5.mp4" type="video/mp4" />
+                            Your browser does not support the video tag.
+                        </video>
                     </div>
                 </DialogContent>
             </Dialog>
